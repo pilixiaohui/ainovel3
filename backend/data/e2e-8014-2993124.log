@@ -1,0 +1,24 @@
+/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/google/api_core/_python_version_support.py:266: FutureWarning: You are using a Python version (3.10.12) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+  warnings.warn(message, FutureWarning)
+INFO:     Started server process [2993130]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8014 (Press CTRL+C to quit)
+INFO:     127.0.0.1:48544 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48548 - "POST /api/v1/snowflake/step1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48552 - "POST /api/v1/snowflake/step2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43144 - "POST /api/v1/snowflake/step3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46568 - "POST /api/v1/snowflake/step4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57582 - "GET /api/v1/roots/119c6ca4-48d9-4e70-82f5-d907bcd2eef0?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57584 - "POST /api/v1/roots/119c6ca4-48d9-4e70-82f5-d907bcd2eef0/entities?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57598 - "GET /api/v1/roots/119c6ca4-48d9-4e70-82f5-d907bcd2eef0/entities?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57604 - "GET /api/v1/scenes/cebcd666-0133-49af-9479-ea02e3c21be4/context?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "POST /api/v1/logic/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52148 - "POST /api/v1/state/extract HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54436 - "POST /api/v1/state/commit?root_id=119c6ca4-48d9-4e70-82f5-d907bcd2eef0&branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54440 - "POST /api/v1/scenes/cebcd666-0133-49af-9479-ea02e3c21be4/dirty?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54450 - "GET /api/v1/roots/119c6ca4-48d9-4e70-82f5-d907bcd2eef0/dirty_scenes?branch_id=master HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2993130]

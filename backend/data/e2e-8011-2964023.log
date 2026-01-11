@@ -1,0 +1,79 @@
+/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/google/api_core/_python_version_support.py:266: FutureWarning: You are using a Python version (3.10.12) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+  warnings.warn(message, FutureWarning)
+INFO:     Started server process [2964029]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8011 (Press CTRL+C to quit)
+INFO:     127.0.0.1:34364 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34380 - "POST /api/v1/snowflake/step1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36420 - "POST /api/v1/snowflake/step2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57602 - "POST /api/v1/snowflake/step3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37500 - "POST /api/v1/snowflake/step4 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 162, in _call_topone
+    payload = json.loads(raw_text)
+  File "/usr/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.10/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 257 (char 256)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/applications.py", line 1139, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 120, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 106, in app
+    response = await f(request)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 430, in app
+    raw_response = await run_endpoint_function(
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/home/zxh/ainovel_v3/backend/app/main.py", line 134, in generate_scene_endpoint
+    scenes = await manager.execute_step_4_scenes(payload.root, payload.characters)
+  File "/home/zxh/ainovel_v3/backend/app/logic/snowflake_manager.py", line 104, in execute_step_4_scenes
+    scene_characters_by_seq = await self.engine.assign_scene_characters(
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 421, in assign_scene_characters
+    scene_character_names = await self._call_model(
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 114, in _call_model
+    return await self._call_topone(response_model, messages, max_output_tokens)
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 167, in _call_topone
+    raise RuntimeError(
+RuntimeError: Topone returned invalid JSON (pos=256, line=1, col=257): ],["回声"],["零"],["回声"],["织梦者"],["回声"],["回声"],["零"],["回声"],["织梦者"],["回声"],["织梦者"],["回声"],["回声"],["回声"],["织梦者"],["回声"],["回声"],["回声"],["回声"],["织梦者"],["回声"],["回声"],["零"],["回声"],["回声"],["织梦者","回声"],["回声"],["回
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2964029]

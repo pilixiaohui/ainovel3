@@ -1,0 +1,123 @@
+/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/google/api_core/_python_version_support.py:266: FutureWarning: You are using a Python version (3.10.12) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+  warnings.warn(message, FutureWarning)
+INFO:     Started server process [2988721]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8012 (Press CTRL+C to quit)
+INFO:     127.0.0.1:56068 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56078 - "POST /api/v1/snowflake/step1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42454 - "POST /api/v1/snowflake/step2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48916 - "POST /api/v1/snowflake/step3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46356 - "POST /api/v1/snowflake/step4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41412 - "GET /api/v1/roots/755a8f54-756f-4209-8eff-18d13423732f?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41428 - "POST /api/v1/roots/755a8f54-756f-4209-8eff-18d13423732f/entities?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41442 - "GET /api/v1/roots/755a8f54-756f-4209-8eff-18d13423732f/entities?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41448 - "GET /api/v1/scenes/9aa5d1d0-c693-48a7-bcbd-4ed242387c14/context?branch_id=master HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41464 - "POST /api/v1/logic/check HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for background tasks to complete. (CTRL+C to force quit)
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_transports/default.py", line 271, in __aiter__
+    async for part in self._httpcore_stream:
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_async/connection_pool.py", line 407, in __aiter__
+    raise exc from None
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_async/connection_pool.py", line 403, in __aiter__
+    async for part in self._stream:
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_async/http11.py", line 342, in __aiter__
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_async/http11.py", line 334, in __aiter__
+    async for chunk in self._connection._receive_response_body(**kwargs):
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_async/http11.py", line 203, in _receive_response_body
+    event = await self._receive_event(timeout=timeout)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_async/http11.py", line 217, in _receive_event
+    data = await self._network_stream.read(
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_backends/anyio.py", line 32, in read
+    with map_exceptions(exc_map):
+  File "/usr/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/applications.py", line 1139, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 120, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 106, in app
+    response = await f(request)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 430, in app
+    raw_response = await run_endpoint_function(
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/home/zxh/ainovel_v3/backend/app/main.py", line 251, in extract_state_endpoint
+    return await engine.extract_state_changes(payload)
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 622, in extract_state_changes
+    return await self._call_model(
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 114, in _call_model
+    return await self._call_topone(response_model, messages, max_output_tokens)
+  File "/home/zxh/ainovel_v3/backend/app/services/llm_engine.py", line 138, in _call_topone
+    data = await self.topone_client.generate_content(
+  File "/home/zxh/ainovel_v3/backend/app/services/topone_client.py", line 97, in generate_content
+    response = await client.post(
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_client.py", line 1859, in post
+    return await self.request(
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_client.py", line 1643, in send
+    raise exc
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_client.py", line 1637, in send
+    await response.aread()
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_models.py", line 979, in aread
+    self._content = b"".join([part async for part in self.aiter_bytes()])
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_models.py", line 979, in <listcomp>
+    self._content = b"".join([part async for part in self.aiter_bytes()])
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_models.py", line 997, in aiter_bytes
+    async for raw_bytes in self.aiter_raw():
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_models.py", line 1055, in aiter_raw
+    async for raw_stream_bytes in self.stream:
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_client.py", line 176, in __aiter__
+    async for chunk in self._stream:
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_transports/default.py", line 270, in __aiter__
+    with map_httpcore_exceptions():
+  File "/usr/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/zxh/ainovel_v3/backend/.venv/lib/python3.10/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2988721]
