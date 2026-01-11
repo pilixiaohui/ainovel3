@@ -1,2 +1,6 @@
 # Python
 __pycache__/
+backend/.env
+backend/.env.example
+backend/.venv
+backend/.pytest_cache
