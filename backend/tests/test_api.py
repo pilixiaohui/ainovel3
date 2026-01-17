@@ -1270,3 +1270,157 @@ def test_branch_revert_endpoint_discards_branch(monkeypatch, tmp_path):
     finally:
         storage.close()
         app.dependency_overrides.clear()
+
+
+def test_commit_graph_endpoints_roundtrip(monkeypatch, tmp_path):
+    monkeypatch.setenv("SNOWFLAKE_ENGINE", "local")
+    storage = GraphStorage(db_path=tmp_path / "snowflake.db")
+    root_id, _character, scene = _seed_storage(storage)
+    app.dependency_overrides[get_graph_storage] = lambda: storage
+    client = TestClient(app)
+    try:
+        initial_head = storage.get_branch_head(
+            root_id=root_id, branch_id=DEFAULT_BRANCH_ID
+        )
+        commit_payload = {
+            "scene_origin_id": str(scene.id),
+            "content": {
+                "actual_outcome": "Outcome A",
+                "summary": "Summary A",
+                "status": "committed",
+            },
+            "message": "commit A",
+        }
+        commit_resp = client.post(
+            f"/api/v1/roots/{root_id}/branches/{DEFAULT_BRANCH_ID}/commit",
+            json=commit_payload,
+        )
+        assert commit_resp.status_code == 200
+        commit_id = commit_resp.json()["commit_id"]
+
+        history_resp = client.get(
+            f"/api/v1/roots/{root_id}/branches/{DEFAULT_BRANCH_ID}/history",
+            params={"limit": 1},
+        )
+        assert history_resp.status_code == 200
+        assert history_resp.json()[0]["id"] == commit_id
+
+        diff_resp = client.get(
+            f"/api/v1/scenes/{scene.id}/diff",
+            params={
+                "from_commit_id": initial_head["head_commit_id"],
+                "to_commit_id": commit_id,
+            },
+        )
+        assert diff_resp.status_code == 200
+        assert diff_resp.json()["actual_outcome"]["to"] == "Outcome A"
+
+        reset_resp = client.post(
+            f"/api/v1/roots/{root_id}/branches/{DEFAULT_BRANCH_ID}/reset",
+            json={"commit_id": initial_head["head_commit_id"]},
+        )
+        assert reset_resp.status_code == 200
+        head_after = storage.get_branch_head(
+            root_id=root_id, branch_id=DEFAULT_BRANCH_ID
+        )
+        assert head_after["head_commit_id"] == initial_head["head_commit_id"]
+
+        fork_resp = client.post(
+            f"/api/v1/roots/{root_id}/branches/fork_from_commit",
+            json={"source_commit_id": initial_head["head_commit_id"], "new_branch_id": "dev"},
+        )
+        assert fork_resp.status_code == 200
+        branch_head = storage.get_branch_head(root_id=root_id, branch_id="dev")
+        assert branch_head["head_commit_id"] == initial_head["head_commit_id"]
+    finally:
+        storage.close()
+        app.dependency_overrides.clear()
+
+
+def test_scene_origin_create_and_delete_endpoints(monkeypatch, tmp_path):
+    monkeypatch.setenv("SNOWFLAKE_ENGINE", "local")
+    storage = GraphStorage(db_path=tmp_path / "snowflake.db")
+    root_id, character, _scene = _seed_storage(storage)
+    app.dependency_overrides[get_graph_storage] = lambda: storage
+    client = TestClient(app)
+    try:
+        tree = storage.list_structure_tree(
+            root_id=root_id, branch_id=DEFAULT_BRANCH_ID
+        )
+        act_id = tree["acts"][0]["act_id"]
+        create_payload = {
+            "title": "New scene",
+            "parent_act_id": act_id,
+            "content": {
+                "pov_character_id": str(character.entity_id),
+                "expected_outcome": "Outcome X",
+                "conflict_type": "internal",
+                "actual_outcome": "",
+            },
+        }
+        created = client.post(
+            f"/api/v1/roots/{root_id}/scene_origins",
+            params={"branch_id": DEFAULT_BRANCH_ID},
+            json=create_payload,
+        )
+        assert created.status_code == 200
+        scene_origin_id = created.json()["scene_origin_id"]
+
+        deleted = client.post(
+            f"/api/v1/roots/{root_id}/scenes/{scene_origin_id}/delete",
+            params={"branch_id": DEFAULT_BRANCH_ID},
+            json={"message": "archive scene"},
+        )
+        assert deleted.status_code == 200
+        head = storage.get_branch_head(
+            root_id=root_id, branch_id=DEFAULT_BRANCH_ID
+        )
+        version = storage.get_scene_at_commit(
+            scene_origin_id=scene_origin_id, commit_id=head["head_commit_id"]
+        )
+        assert version["status"] == "archived"
+    finally:
+        storage.close()
+        app.dependency_overrides.clear()
+
+
+def test_commit_gc_endpoint(monkeypatch, tmp_path):
+    monkeypatch.setenv("SNOWFLAKE_ENGINE", "local")
+    storage = GraphStorage(db_path=tmp_path / "snowflake.db")
+    root_id, _character, scene = _seed_storage(storage)
+    app.dependency_overrides[get_graph_storage] = lambda: storage
+    client = TestClient(app)
+    try:
+        initial_head = storage.get_branch_head(
+            root_id=root_id, branch_id=DEFAULT_BRANCH_ID
+        )
+        commit_a = storage.commit_scene(
+            root_id=root_id,
+            branch_id=DEFAULT_BRANCH_ID,
+            scene_origin_id=str(scene.id),
+            content={"actual_outcome": "A", "summary": "A", "status": "committed"},
+            message="commit A",
+        )
+        commit_b = storage.commit_scene(
+            root_id=root_id,
+            branch_id=DEFAULT_BRANCH_ID,
+            scene_origin_id=str(scene.id),
+            content={"actual_outcome": "B", "summary": "B", "status": "committed"},
+            message="commit B",
+        )
+        storage.reset_branch_head(
+            root_id=root_id,
+            branch_id=DEFAULT_BRANCH_ID,
+            commit_id=initial_head["head_commit_id"],
+        )
+
+        gc_resp = client.post(
+            "/api/v1/commits/gc", json={"retention_days": 0}
+        )
+        assert gc_resp.status_code == 200
+        deleted = set(gc_resp.json()["deleted_commit_ids"])
+        assert commit_a["commit_id"] in deleted
+        assert commit_b["commit_id"] in deleted
+    finally:
+        storage.close()
+        app.dependency_overrides.clear()

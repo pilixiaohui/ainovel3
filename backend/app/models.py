@@ -56,3 +56,55 @@ class CharacterValidationResult(BaseModel):
 
     valid: bool
     issues: List[str] = Field(default_factory=list)
+
+
+class Commit(BaseModel):
+    """不可变提交节点。"""
+
+    id: str
+    parent_id: Optional[str] = None
+    root_id: str
+    created_at: str
+    message: Optional[str] = None
+
+
+class SceneOrigin(BaseModel):
+    """场景身份节点（跨分支不变）。"""
+
+    id: str
+    root_id: str
+    title: Optional[str] = None
+    created_at: str
+    initial_commit_id: str
+    sequence_index: int
+    parent_act_id: str
+
+
+class SceneVersion(BaseModel):
+    """场景版本节点（隶属于 Commit）。"""
+
+    id: str
+    scene_origin_id: str
+    commit_id: str
+    created_at: str
+    pov_character_id: Optional[str] = None
+    status: str
+    expected_outcome: str
+    conflict_type: str
+    actual_outcome: str
+    summary: Optional[str] = None
+    rendered_content: Optional[str] = None
+    logic_exception: bool = False
+    logic_exception_reason: Optional[str] = None
+    dirty: bool = False
+
+
+class BranchHead(BaseModel):
+    """分支 HEAD 指针节点。"""
+
+    id: str
+    root_id: str
+    branch_id: str
+    head_commit_id: str
+    fork_point_commit_id: Optional[str] = None
+    version: int

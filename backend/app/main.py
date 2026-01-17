@@ -22,7 +22,7 @@ from app.llm.schemas import (
 from app.llm.topone_gateway import ToponeGateway
 from app.config import SCENE_MAX_COUNT, SCENE_MIN_COUNT
 from app.logic.snowflake_manager import SnowflakeManager
-from app.models import CharacterSheet, SceneNode, SnowflakeRoot
+from app.models import CharacterSheet, Commit, SceneNode, SnowflakeRoot
 from app.services.llm_engine import LLMEngine, LocalStoryEngine
 from app.services.topone_client import ToponeClient
 from app.constants import DEFAULT_BRANCH_ID
@@ -218,6 +218,60 @@ class SceneRenderResult(BaseModel):
     content: str
 
 
+class ForkFromCommitPayload(BaseModel):
+    source_commit_id: str = Field(..., min_length=1)
+    new_branch_id: str = Field(..., min_length=1)
+    parent_branch_id: str | None = None
+
+
+class ForkFromScenePayload(BaseModel):
+    source_branch_id: str = Field(..., min_length=1)
+    scene_origin_id: str = Field(..., min_length=1)
+    new_branch_id: str = Field(..., min_length=1)
+    commit_id: str | None = None
+
+
+class ResetBranchPayload(BaseModel):
+    commit_id: str = Field(..., min_length=1)
+
+
+class CommitScenePayload(BaseModel):
+    scene_origin_id: str = Field(..., min_length=1)
+    content: dict[str, Any] = Field(default_factory=dict)
+    message: str = Field(..., min_length=1)
+    expected_head_version: int | None = None
+
+
+class CommitResult(BaseModel):
+    commit_id: str
+    scene_version_ids: List[str] = Field(default_factory=list)
+
+
+class CreateSceneOriginPayload(BaseModel):
+    title: str = Field(..., min_length=1)
+    parent_act_id: str = Field(..., min_length=1)
+    content: dict[str, Any] = Field(default_factory=dict)
+
+
+class CreateSceneOriginResult(BaseModel):
+    commit_id: str
+    scene_origin_id: str
+    scene_version_id: str
+
+
+class DeleteSceneOriginPayload(BaseModel):
+    message: str = Field(..., min_length=1)
+
+
+class GcPayload(BaseModel):
+    retention_days: int = Field(..., ge=0)
+
+
+class GcResult(BaseModel):
+    deleted_commit_ids: List[str] = Field(default_factory=list)
+    deleted_scene_version_ids: List[str] = Field(default_factory=list)
+
+
 def get_llm_engine() -> LLMEngine | LocalStoryEngine | ToponeGateway:
     """默认依赖注入，可在测试中 override。"""
     engine_mode = _require_snowflake_engine_mode()
@@ -383,6 +437,160 @@ async def revert_branch_endpoint(
     return BranchView(root_id=root_id, branch_id=branch_id)
 
 
+@app.post(
+    "/api/v1/roots/{root_id}/branches/fork_from_commit",
+    response_model=BranchView,
+)
+async def fork_from_commit_endpoint(
+    root_id: str,
+    payload: ForkFromCommitPayload,
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> BranchView:
+    try:
+        storage.fork_from_commit(
+            root_id=root_id,
+            source_commit_id=payload.source_commit_id,
+            new_branch_id=payload.new_branch_id,
+            parent_branch_id=payload.parent_branch_id,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        detail = str(exc)
+        status_code = 409 if "already exists" in detail else 400
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+    return BranchView(root_id=root_id, branch_id=payload.new_branch_id)
+
+
+@app.post(
+    "/api/v1/roots/{root_id}/branches/fork_from_scene",
+    response_model=BranchView,
+)
+async def fork_from_scene_endpoint(
+    root_id: str,
+    payload: ForkFromScenePayload,
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> BranchView:
+    try:
+        storage.fork_from_scene(
+            root_id=root_id,
+            source_branch_id=payload.source_branch_id,
+            scene_origin_id=payload.scene_origin_id,
+            new_branch_id=payload.new_branch_id,
+            commit_id=payload.commit_id,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        detail = str(exc)
+        status_code = 409 if "already exists" in detail else 400
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+    return BranchView(root_id=root_id, branch_id=payload.new_branch_id)
+
+
+@app.post(
+    "/api/v1/roots/{root_id}/branches/{branch_id}/reset",
+    response_model=BranchView,
+)
+async def reset_branch_endpoint(
+    root_id: str,
+    branch_id: str = Path(..., min_length=1),
+    payload: ResetBranchPayload = Body(...),
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> BranchView:
+    try:
+        storage.reset_branch_head(
+            root_id=root_id, branch_id=branch_id, commit_id=payload.commit_id
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return BranchView(root_id=root_id, branch_id=branch_id)
+
+
+@app.get(
+    "/api/v1/roots/{root_id}/branches/{branch_id}/history",
+    response_model=List[Commit],
+)
+async def branch_history_endpoint(
+    root_id: str,
+    branch_id: str = Path(..., min_length=1),
+    limit: int = Query(50, ge=1),
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> List[Commit]:
+    try:
+        return storage.get_branch_history(
+            root_id=root_id, branch_id=branch_id, limit=limit
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/api/v1/roots/{root_id}/branches/{branch_id}/commit",
+    response_model=CommitResult,
+)
+async def commit_scene_endpoint(
+    root_id: str,
+    branch_id: str = Path(..., min_length=1),
+    payload: CommitScenePayload = Body(...),
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> CommitResult:
+    try:
+        return storage.commit_scene(
+            root_id=root_id,
+            branch_id=branch_id,
+            scene_origin_id=payload.scene_origin_id,
+            content=payload.content,
+            message=payload.message,
+            expected_head_version=payload.expected_head_version,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/api/v1/roots/{root_id}/scene_origins",
+    response_model=CreateSceneOriginResult,
+)
+async def create_scene_origin_endpoint(
+    root_id: str,
+    payload: CreateSceneOriginPayload,
+    branch_id: str = Query(..., min_length=1),
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> CreateSceneOriginResult:
+    try:
+        return storage.create_scene_origin(
+            root_id=root_id,
+            branch_id=branch_id,
+            title=payload.title,
+            parent_act_id=payload.parent_act_id,
+            content=payload.content,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/commits/gc", response_model=GcResult)
+async def gc_commits_endpoint(
+    payload: GcPayload,
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> GcResult:
+    try:
+        return storage.gc_orphan_commits(retention_days=payload.retention_days)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.get("/api/v1/roots/{root_id}", response_model=RootGraphView)
 async def get_root_graph_endpoint(
     root_id: str,
@@ -470,6 +678,49 @@ async def get_scene_context_endpoint(
 ) -> SceneContextView:
     try:
         return storage.get_scene_context(scene_id=scene_id, branch_id=branch_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/scenes/{scene_id}/diff")
+async def diff_scene_versions_endpoint(
+    scene_id: str,
+    from_commit_id: str = Query(..., min_length=1),
+    to_commit_id: str = Query(..., min_length=1),
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> dict[str, dict[str, Any]]:
+    try:
+        return storage.diff_scene_versions(
+            scene_origin_id=scene_id,
+            from_commit_id=from_commit_id,
+            to_commit_id=to_commit_id,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post(
+    "/api/v1/roots/{root_id}/scenes/{scene_id}/delete",
+    response_model=CommitResult,
+)
+async def delete_scene_origin_endpoint(
+    root_id: str,
+    scene_id: str,
+    payload: DeleteSceneOriginPayload,
+    branch_id: str = Query(..., min_length=1),
+    storage: GraphStorage = Depends(get_graph_storage),
+) -> CommitResult:
+    try:
+        return storage.delete_scene_origin(
+            root_id=root_id,
+            branch_id=branch_id,
+            scene_origin_id=scene_id,
+            message=payload.message,
+        )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
